@@ -1,3 +1,4 @@
+use bytefmt;
 use clap::{AppSettings, Clap};
 
 #[derive(Clap, Debug)]
@@ -13,6 +14,8 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
+
+    let size: u64 = bytefmt::parse_to(&args.size, bytefmt::Unit::KIB).unwrap() as u64;
 
     println!("{:#?}", args);
 }
