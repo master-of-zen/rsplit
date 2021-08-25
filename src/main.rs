@@ -1,13 +1,12 @@
+use bytefmt;
 use chrono::NaiveTime;
+use clap::{AppSettings, Clap};
 use regex::{self, Regex};
 use std::path::PathBuf;
 use std::process::exit;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 use std::time::Duration;
-
-use bytefmt;
-use clap::{AppSettings, Clap};
 
 #[derive(Clap, Debug)]
 #[clap(version = "0.1", author = "Zen <master_of_zen@protonmail.com>")]
@@ -47,30 +46,24 @@ fn parse_to_bytes(size: &String) -> u64 {
     }
 }
 
-fn parse_ffmpeg_time(ffmpeg_string: String) {
+/// Parses ffmpeg output string and returns duration in miliseconds
+fn parse_ffmpeg_time(ffmpeg_string: String) -> u64 {
     let re = Regex::new(r"time=(\d+):(\d+):(\d+).(\d+)").unwrap();
     let (hour, min, sec, mil) = match re.is_match(&ffmpeg_string) {
         true => {
             let re_match = re.captures_iter(&ffmpeg_string).last().unwrap();
             (
-                re_match.get(1).unwrap().as_str(),
-                re_match.get(2).unwrap().as_str(),
-                re_match.get(3).unwrap().as_str(),
-                re_match.get(4).unwrap().as_str(),
+                re_match.get(1).unwrap().as_str().parse::<u64>().unwrap(),
+                re_match.get(2).unwrap().as_str().parse::<u64>().unwrap(),
+                re_match.get(3).unwrap().as_str().parse::<u64>().unwrap(),
+                re_match.get(4).unwrap().as_str().parse::<u64>().unwrap(),
             )
         }
         false => panic!("\nFailed to match regex for:\n{:#?}", ffmpeg_string),
     };
     dbg!(hour, min, sec, mil);
-    //ffmpeg_string
-}
 
-/// Parses ffmpeg output string and returns duration in seconds and miliseconds
-fn _parse_duration(_ffmpeg_string: String) {
-    let duration = "00:00:11";
-    let fmt_str = "%H:%M:%S.%09m";
-    let no_timezone = NaiveTime::parse_from_str(&duration, fmt_str).unwrap();
-    dbg!(no_timezone);
+    hour * 60 * 60 * 1000 + min * 60 * 1000 + sec * 1000 + mil
 }
 
 fn get_duration(file: PathBuf) {
