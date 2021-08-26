@@ -22,13 +22,15 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let size: u64 = parse_to_bytes(&args.size);
+    let input_size: u64 = parse_to_bytes(&args.size);
+    let fl = PathBuf::from_str(&args.input).unwrap();
+
+    let input_duration = get_duration(fl);
+
     // println!("{:#?}", args);
 
-    let fl = PathBuf::from_str(&args.input).unwrap();
-    get_duration(fl);
-
-    println!("{:#?}", size)
+    println!("Input size: {}", input_size);
+    println!("Input length: {}", format_time(input_duration));
 }
 
 /// Takes string of size provided by user and returns u64 of bytes
@@ -65,8 +67,8 @@ fn parse_ffmpeg_time(ffmpeg_string: String) -> u64 {
 
     hour * 60 * 60 * 1000 + min * 60 * 1000 + sec * 1000 + mil
 }
-
-fn get_duration(file: PathBuf) {
+/// Gets duration of file in miliseconds
+fn get_duration(file: PathBuf) -> u64 {
     let mut cmd = Command::new("ffmpeg");
     cmd.args(&[
         "-hide_banner",
@@ -94,8 +96,17 @@ fn get_duration(file: PathBuf) {
         Err(st) => panic!("\nFailed to execute ffmpeg. \n{:#?}", st),
     };
 
-    let duration = parse_ffmpeg_time(output);
-    println!("{:#?}", duration);
+    parse_ffmpeg_time(output)
 }
 
 fn _segment() {}
+
+fn format_time(input_duration: u64) -> String {
+    format!(
+        "{:.0}:{:.0}:{:.0}.{:.0}",
+        input_duration / 60 / 60 / 1000,
+        input_duration / 60 / 1000,
+        input_duration / 1000,
+        input_duration % 1000
+    )
+}
