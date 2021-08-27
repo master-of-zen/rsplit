@@ -121,8 +121,11 @@ fn segmenting(input_file: PathBuf, input_duration: u64, split_size: u64) {
         let chunk_length = get_duration(&output);
         let chunk_size = fs::metadata(output).unwrap().len();
         println!(
-            "Chunk: {} Size: {}, Length: {} ",
-            segments, chunk_size, chunk_length
+            "Chunk: {} Size: {}B, Length: {}.{}s ",
+            segments,
+            chunk_size,
+            chunk_length / 1000,
+            chunk_length % 1000
         );
 
         done_length += chunk_length;
