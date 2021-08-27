@@ -25,14 +25,12 @@ fn main() {
     let fl = PathBuf::from_str(&args.input).unwrap();
     let input_duration = get_duration(&fl);
     let input_size = fs::metadata(&fl).unwrap().len();
-    let segments = input_size / split_size;
 
     fl.canonicalize().unwrap();
 
     println!("Input length: {}", format_time(input_duration));
     println!("Input size: {}B", input_size);
     println!("Split size: {}B", split_size);
-    println!("Expected segments: {}", segments);
 
     segmenting(fl, input_duration, split_size)
 }
