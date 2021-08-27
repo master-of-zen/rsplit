@@ -1,3 +1,4 @@
+![](https://cdn.discordapp.com/attachments/829353018943602708/880923409041743903/rsync.png)
 # rsplit
 Splits video into chunks
 
