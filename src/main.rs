@@ -75,6 +75,8 @@ fn get_duration(file: &PathBuf) -> u64 {
         "-hide_banner",
         "-i",
         file.as_os_str().to_owned().to_str().unwrap(),
+        "-c",
+        "copy",
         "-f",
         "null",
         "-",
