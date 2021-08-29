@@ -1,5 +1,6 @@
 use bytefmt;
 use clap::{AppSettings, Clap};
+use path_abs::{PathAbs, PathInfo};
 use regex::{self, Regex};
 use std::fs;
 use std::path::PathBuf;
@@ -16,6 +17,9 @@ struct Args {
 
     #[clap(short, long)]
     size: String,
+
+    #[clap(short, long)]
+    output: Option<String>,
 }
 
 fn main() {
@@ -23,6 +27,26 @@ fn main() {
 
     let split_size: u64 = parse_to_bytes(&args.size);
     let fl = PathBuf::from_str(&args.input).unwrap();
+
+    let output = match args.output {
+        Some(out) => {
+            let output = PathAbs::new(out).expect(
+                "Failed to canonicalize output path: the output file must have a valid parent directory",
+              );
+
+            if !output
+                .parent()
+                .expect("Failed to get parent directory of canonicalized path")
+                .exists()
+            {
+                println!("Path to file is invalid: {:?}", &output);
+                std::process::exit(1);
+            } else {
+                PathBuf::from_str(output.to_str().unwrap()).unwrap()
+            }
+        }
+        None => fl.clone(),
+    };
     let input_duration = get_duration(&fl);
     let input_size = fs::metadata(&fl).unwrap().len();
 
@@ -32,7 +56,7 @@ fn main() {
     println!("Input size: {}B", input_size);
     println!("Split size: {}B", split_size);
 
-    segmenting(fl, input_duration, split_size)
+    segmenting(fl, output, input_duration, split_size)
 }
 
 /// Takes string of size provided by user and returns u64 of bytes
@@ -103,7 +127,7 @@ fn get_duration(file: &PathBuf) -> u64 {
 }
 
 /// Segmeting input file in while loop until it's exhausted
-fn segmenting(input_file: PathBuf, input_duration: u64, split_size: u64) {
+fn segmenting(input_file: PathBuf, output_file: PathBuf, input_duration: u64, split_size: u64) {
     let mut done_length = 0u64;
     let end_length = input_duration;
 
@@ -111,11 +135,11 @@ fn segmenting(input_file: PathBuf, input_duration: u64, split_size: u64) {
     while done_length < end_length {
         segments += 1;
 
-        let output = &input_file.clone().with_file_name(format!(
+        let output = &output_file.clone().with_file_name(format!(
             "{}_{}.{}",
-            input_file.file_stem().unwrap().to_str().unwrap(),
+            output_file.file_stem().unwrap().to_str().unwrap(),
             segments,
-            input_file.extension().unwrap().to_str().unwrap(),
+            output_file.extension().unwrap().to_str().unwrap(),
         ));
 
         segment(&input_file, &output, done_length, split_size);
